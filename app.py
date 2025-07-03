@@ -2,7 +2,26 @@ import streamlit as st
 import re
 import pandas as pd
 
-# Function to process tab-separated input
+# Function to process AW IDs and return unique numeric AW IDs
+def get_unique_aw_ids(input_data):
+    # Split input by newlines and strip whitespace
+    lines = [line.strip() for line in input_data.split('\n') if line.strip()]
+    # Skip the header row
+    data_lines = lines[1:]
+    # Collect all numeric AW IDs
+    all_aw_ids = []
+    for line in data_lines:
+        tokens = line.split('\t')
+        # Process AW IDs from columns 2 onward (skip NAME and Preview columns)
+        aw_id_columns = tokens[2:] if len(tokens) > 2 else []
+        # Filter numeric AW IDs
+        numeric_ids = [token.strip() for token in aw_id_columns if token.strip().isdigit()]
+        all_aw_ids.extend(numeric_ids)
+    # Remove duplicates while preserving order
+    unique_aw_ids = list(dict.fromkeys(all_aw_ids))
+    return unique_aw_ids
+
+# Function to process tab-separated input for table generation
 def process_input(input_data):
     # Split input by newlines and strip whitespace
     lines = [line.strip() for line in input_data.split('\n') if line.strip()]
@@ -24,10 +43,10 @@ def process_input(input_data):
             continue  # Skip if no artwork name
         
         # Process AW IDs from columns 2 onward (skip Preview column)
-        aw_id_columns = tokens[2:] if len(tokens) > 2 else []  # Skip NAME and Preview columns
+        aw_id_columns = tokens[2:] if len(tokens) > 2 else []
         
-        # Filter unique AW IDs in this row (numeric or 'Disabled')
-        unique_ids = list(dict.fromkeys([token.strip() for token in aw_id_columns if token.strip() and (token.strip().isdigit() or token.strip() == 'Disabled')]))
+        # Filter unique numeric AW IDs in this row
+        unique_ids = list(dict.fromkeys([token.strip() for token in aw_id_columns if token.strip().isdigit()]))
         
         for aw_id in unique_ids:
             aw_ids.append(aw_id)
@@ -73,6 +92,21 @@ Symbol Mosaic Tablet Case (Retail Exclusive)\t\t35221897
 Pattern Whisper Snappy Cardholder Stand (Retail Exclusive)\t\t35212085
 Dialect Wave Snappy Wallet (Retail Exclusive)\t\t35207288""")
 
+# Section for unique AW IDs
+st.header("Unique AW ID Processor")
+if st.button("Process Unique AW IDs"):
+    if input_data:
+        unique_aw_ids = get_unique_aw_ids(input_data)
+        if unique_aw_ids:
+            st.subheader("Unique Numeric AW IDs:")
+            st.text('\n'.join(unique_aw_ids))
+        else:
+            st.error("No valid numeric AW IDs found.")
+    else:
+        st.error("Please enter tab-separated data.")
+
+# Section for generating table
+st.header("AW ID and Short URL Table")
 if st.button("Generate Table"):
     if input_data:
         df = process_input(input_data)
@@ -98,6 +132,6 @@ if st.button("Generate Table"):
                 <button onclick="copyToClipboard()">Copy Table to Clipboard</button>
             """.format(table_text), unsafe_allow_html=True)
         else:
-            st.error("No valid AW IDs or artwork names provided.")
+            st.error("No valid numeric AW IDs or artwork names provided.")
     else:
         st.error("Please provide tab-separated data.")
