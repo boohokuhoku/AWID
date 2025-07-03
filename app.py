@@ -73,6 +73,51 @@ def process_input(input_data):
     
     return df
 
+# Function to compare tables and highlight differences
+def compare_tables(generated_df, comparison_input):
+    # Parse comparison input into DataFrame
+    comparison_lines = [line.strip() for line in comparison_input.split('\n') if line.strip()]
+    if not comparison_lines:
+        return generated_df, []
+    
+    # Assume first line is header
+    header = comparison_lines[0].split('\t')
+    data = [line.split('\t') for line in comparison_lines[1:]]
+    
+    # Create comparison DataFrame
+    comparison_df = pd.DataFrame(data, columns=header[:3])  # Take first 3 columns: AW ID, Artwork Name, Short URL
+    comparison_df = comparison_df[['AW ID', 'Artwork Name', 'Short URL']].dropna()
+    
+    # Ensure AW ID is string for comparison
+    generated_df['AW ID'] = generated_df['AW ID'].astype(str)
+    comparison_df['AW ID'] = comparison_df['AW ID'].astype(str)
+    
+    # Merge DataFrames to compare
+    merged_df = generated_df.merge(comparison_df, how='outer', indicator=True, suffixes=('_gen', '_comp'))
+    
+    # Identify differing rows
+    diff_rows = []
+    for idx, row in merged_df.iterrows():
+        if row['_merge'] != 'both':
+            diff_rows.append(idx)
+        else:
+            # Check if any column differs
+            if (row['AW ID_gen'] != row['AW ID_comp'] or 
+                row['Artwork Name_gen'] != row['Artwork Name_comp'] or 
+                row['Short URL_gen'] != row['Short URL_comp']):
+                diff_rows.append(idx)
+    
+    # Create styled DataFrame for display
+    styled_df = generated_df.copy()
+    def highlight_diff(row):
+        if row.name in diff_rows:
+            return ['background-color: #ffcccc' for _ in row]
+        return ['background-color: white' for _ in row]
+    
+    styled_df = styled_df.style.apply(highlight_diff, axis=1)
+    
+    return styled_df, diff_rows
+
 # Streamlit app layout
 st.title("Artwork ID and URL Generator")
 
@@ -109,13 +154,13 @@ if st.button("Process Unique AW IDs"):
 st.header("AW ID and Short URL Table")
 if st.button("Generate Table"):
     if input_data:
-        df = process_input(input_data)
-        if not df.empty:
+        generated_df = process_input(input_data)
+        if not generated_df.empty:
             st.subheader("Generated Table:")
-            st.dataframe(df)
+            st.dataframe(generated_df)
             
             # Convert table to plain text for copying
-            table_text = df.to_string(index=False)
+            table_text = generated_df.to_string(index=False)
             
             # Create a button to copy the table content
             st.text_area("Copyable Table Content:", table_text, height=150)
@@ -131,7 +176,36 @@ if st.button("Generate Table"):
                 <textarea id="copyable-text" style="display:none;">{}</textarea>
                 <button onclick="copyToClipboard()">Copy Table to Clipboard</button>
             """.format(table_text), unsafe_allow_html=True)
+            
+            # Store generated table in session state for comparison
+            st.session_state['generated_df'] = generated_df
         else:
             st.error("No valid numeric AW IDs or artwork names provided.")
     else:
         st.error("Please provide tab-separated data.")
+
+# Section for table comparison
+st.header("Table Comparison")
+comparison_input = st.text_area("Enter comparison table (tab-separated, with headers AW ID, Artwork Name, Short URL):", 
+                               value="""AW ID\tArtwork Name\tShort URL
+35221837\tSymbol Mosaic Case (Retail Exclusive)\tsymbol-mosaic-case-retail-exclusive
+35226788\tSymbol Mosaic Case (Retail Exclusive)\tsymbol-mosaic-case-retail-exclusive-atwgp1
+35226790\tSymbol Mosaic Case (Retail Exclusive)\tsymbol-mosaic-case-retail-exclusive-atwgp2
+35207137\tDialect Wave Case (Retail Exclusive)\tdialect-wave-case-retail-exclusive
+35207351\tDialect Wave Case (Retail Exclusive)\tdialect-wave-case-retail-exclusive-atwgp1
+35207375\tDialect Wave Case (Retail Exclusive)\tdialect-wave-case-retail-exclusive-atwgp2""")
+
+if st.button("Compare Tables"):
+    if 'generated_df' in st.session_state and comparison_input:
+        styled_df, diff_rows = compare_tables(st.session_state['generated_df'], comparison_input)
+        if not styled_df.data.empty:
+            st.subheader("Comparison Table (Differences Highlighted in Red):")
+            st.dataframe(styled_df)
+            if diff_rows:
+                st.write(f"Rows with differences (indices): {diff_rows}")
+            else:
+                st.write("No differences found.")
+        else:
+            st.error("No valid data in comparison table.")
+    else:
+        st.error("Please generate a table first and provide a comparison table.")
