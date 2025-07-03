@@ -2,91 +2,81 @@ import streamlit as st
 import re
 import pandas as pd
 
-# Function to process AW IDs
-def get_unique_aw_ids(aw_ids_input):
+# Function to process tab-separated input
+def process_input(input_data):
     # Split input by newlines and strip whitespace
-    lines = [line.strip() for line in aw_ids_input.split('\n') if line.strip()]
-    # Filter lines that contain at least one numeric ID
-    numeric_lines = [line for line in lines if any(token.isdigit() for token in re.split(r'[,\t]+', line))]
-    # Remove duplicate lines while preserving order
-    unique_lines = list(dict.fromkeys(numeric_lines))
-    return unique_lines
-
-# Function to generate short URLs from artwork names
-def generate_short_urls(artwork_names_input):
-    # Split input by newlines, strip whitespace, and filter out empty strings
-    artwork_names = [name.strip() for name in artwork_names_input.split('\n') if name.strip()]
+    lines = [line.strip() for line in input_data.split('\n') if line.strip()]
+    
+    # Initialize lists for the table
+    aw_ids = []
+    artwork_names = []
     short_urls = []
     name_count = {}
     
-    for name in artwork_names:
-        # Convert to lowercase, replace special characters with spaces, and split
-        clean_name = re.sub(r'[^\w\s]', ' ', name.lower()).strip()
-        # Replace multiple spaces with single space and then replace spaces with hyphens
-        slug = '-'.join(clean_name.split())
+    # Process each data line (skip header)
+    for line in lines[1:]:  # Skip the header row
+        tokens = line.split('\t')
+        if not tokens or len(tokens) < 2:
+            continue  # Skip empty or invalid lines
         
-        # Handle duplicates
-        if slug in name_count:
-            name_count[slug] += 1
-            # For duplicates: second occurrence gets -atwgp1, third gets -atwgp2, etc.
-            short_urls.append(f"{slug}-atwgp{name_count[slug]}")
-        else:
-            name_count[slug] = 0
-            # First occurrence gets no suffix
-            short_urls.append(slug)
-    
-    return short_urls
-
-# Function to create a table from AW IDs and short URLs
-def create_id_url_table(aw_ids, short_urls):
-    # Ensure equal lengths by truncating to the shorter length
-    min_length = min(len(aw_ids), len(short_urls))
-    aw_ids = aw_ids[:min_length]
-    short_urls = short_urls[:min_length]
+        artwork_name = tokens[0].strip()  # First column is the artwork name
+        if not artwork_name:
+            continue  # Skip if no artwork name
+        
+        # Process AW IDs from columns 2 onward (skip Preview column)
+        aw_id_columns = tokens[2:] if len(tokens) > 2 else []  # Skip NAME and Preview columns
+        
+        # Filter unique AW IDs in this row (numeric or 'Disabled')
+        unique_ids = list(dict.fromkeys([token.strip() for token in aw_id_columns if token.strip() and (token.strip().isdigit() or token.strip() == 'Disabled')]))
+        
+        for aw_id in unique_ids:
+            aw_ids.append(aw_id)
+            artwork_names.append(artwork_name)
+            
+            # Generate short URL for the artwork name
+            clean_name = re.sub(r'[^\w\s]', ' ', artwork_name.lower()).strip()
+            slug = '-'.join(clean_name.split())
+            
+            # Handle duplicates
+            if slug in name_count:
+                name_count[slug] += 1
+                short_urls.append(f"{slug}-atwgp{name_count[slug]}")
+            else:
+                name_count[slug] = 0
+                short_urls.append(slug)
     
     # Create DataFrame
     df = pd.DataFrame({
         'AW ID': aw_ids,
+        'Artwork Name': artwork_names,
         'Short URL': short_urls
     })
+    
     return df
 
 # Streamlit app layout
 st.title("Artwork ID and URL Generator")
 
-# Input section for AW IDs
-st.header("AW ID Processor")
-aw_ids_input = st.text_area("Enter AW IDs (one line per entry, tab or comma-separated):")
-if st.button("Process AW IDs"):
-    if aw_ids_input:
-        unique_aw_ids = get_unique_aw_ids(aw_ids_input)
-        if unique_aw_ids:
-            st.subheader("Unique AW ID Lines:")
-            st.text('\n'.join(unique_aw_ids))
-        else:
-            st.error("No valid lines with numeric AW IDs found.")
-    else:
-        st.error("Please enter at least one line of AW IDs.")
+# Input section for tab-separated data
+st.header("Input Processor")
+input_data = st.text_area("Enter tab-separated data (including headers):", 
+                         value="""NAME\tPreview (Suggested model for web display)\tiPhone/TA\tArtwork ID\tHuawei M60/M60 pro Artwork ID\tHuawei M70/M70 pro Artwork ID\tHuawei P70/P70 pro/P70 pro+ Artwork ID\tHuawei P70 Ultra Artwork ID\tHuawei Pocket 2 Artwork ID\tHuawei PuraX Artwork ID\tGalaxy S Series Artwork ID\tGalaxy Z Fold 6-5 Artwork ID\tGalaxy Z Flip 7-5 Artwork ID\tGalaxy Z Flip 4 Artwork ID\tGoogle Pixel 9-8 Artwork ID\tGoogle Pixel 9 Pro Fold Artwork ID\tGoogle Pixel Fold Artwork ID
+Symbol Mosaic Case (Retail Exclusive)\t\t35221837\t35226788\t35226788\t35221837\t35226788\t35226790\tDisabled\t35221837\t35226788\tDisabled\tDisabled\t35221837\t35221837\tDisabled
+Dialect Wave Case (Retail Exclusive)\t\t35207137\t35207351\t35207351\t35207351\t35207351\t35207375\tDisabled\t35207351\t35207351\tDisabled\tDisabled\t35207351\t35207351\tDisabled
+Pattern Whisper Case (Retail Exclusive)\t\t35211989\t35212045\t35212045\t35212045\t35212045\t35212048\tDisabled\t35211989\t35211989\tDisabled\tDisabled\t35211989\t35211989\t35211989
+Linear Passage Case (Retail Exclusive)\t\t35207147\t35207147\t35207147\t35207147\t35207147\t35207365\tDisabled\t35207147\t35207147\tDisabled\tDisabled\t35207147\t35207147\t35207147
+Symbol Mosaic Snappy Grip Stand (Retail Exclusive)\t\t35221900
+Pattern Whisper Snappy Grip Stand (Retail Exclusive)\t\t35212088
+Symbol Mosaic Snappy Grip Holder (Retail Exclusive)\t\t35221903
+Linear Passage Earbuds Case (Retail Exclusive)\t\t35207266
+Symbol Mosaic Tablet Case (Retail Exclusive)\t\t35221897
+Pattern Whisper Snappy Cardholder Stand (Retail Exclusive)\t\t35212085
+Dialect Wave Snappy Wallet (Retail Exclusive)\t\t35207288""")
 
-# Input section for Artwork Names
-st.header("Artwork Name to Short URL")
-artwork_names_input = st.text_area("Enter artwork names (one per line):")
-if st.button("Generate Short URLs"):
-    if artwork_names_input:
-        short_urls = generate_short_urls(artwork_names_input)
-        st.subheader("Generated Short URLs:")
-        st.text('\n'.join(short_urls))
-    else:
-        st.error("Please enter at least one artwork name.")
-
-# Section for generating and copying table
-st.header("AW ID and Short URL Table")
 if st.button("Generate Table"):
-    if aw_ids_input and artwork_names_input:
-        unique_aw_ids = get_unique_aw_ids(aw_ids_input)
-        short_urls = generate_short_urls(artwork_names_input)
-        if unique_aw_ids and short_urls:
-            df = create_id_url_table(unique_aw_ids, short_urls)
+    if input_data:
+        df = process_input(input_data)
+        if not df.empty:
             st.subheader("Generated Table:")
             st.dataframe(df)
             
@@ -110,4 +100,4 @@ if st.button("Generate Table"):
         else:
             st.error("No valid AW IDs or artwork names provided.")
     else:
-        st.error("Please provide both AW IDs and artwork names.")
+        st.error("Please provide tab-separated data.")
