@@ -4,10 +4,11 @@ import pandas as pd
 
 # Function to process AW IDs
 def get_unique_aw_ids(aw_ids_input):
-    # Split input by commas or newlines, strip whitespace, and filter out empty strings
-    aw_ids = [id.strip() for id in aw_ids_input.replace('\n', ',').split(',') if id.strip()]
-    # Remove duplicates while preserving order
-    unique_aw_ids = list(dict.fromkeys(aw_ids))
+    # Split input by commas, newlines, or tabs, strip whitespace, and filter out empty strings
+    aw_ids = [id.strip() for id in re.split(r'[,\n\t]+', aw_ids_input) if id.strip()]
+    # Filter for numeric IDs only and remove duplicates while preserving order
+    numeric_ids = [id for id in aw_ids if id.isdigit()]
+    unique_aw_ids = list(dict.fromkeys(numeric_ids))
     return unique_aw_ids
 
 # Function to generate short URLs from artwork names
@@ -54,12 +55,15 @@ st.title("Artwork ID and URL Generator")
 
 # Input section for AW IDs
 st.header("AW ID Processor")
-aw_ids_input = st.text_area("Enter AW IDs (comma-separated or one per line):")
+aw_ids_input = st.text_area("Enter AW IDs (comma, tab, or newline-separated):")
 if st.button("Process AW IDs"):
     if aw_ids_input:
         unique_aw_ids = get_unique_aw_ids(aw_ids_input)
-        st.subheader("Unique AW IDs:")
-        st.text('\n'.join(unique_aw_ids))
+        if unique_aw_ids:
+            st.subheader("Unique AW IDs:")
+            st.text('\n'.join(unique_aw_ids))
+        else:
+            st.error("No valid numeric AW IDs found.")
     else:
         st.error("Please enter at least one AW ID.")
 
