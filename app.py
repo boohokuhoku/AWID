@@ -8,15 +8,17 @@ if 'full_table_result' not in st.session_state:
 if 'pdp_result' not in st.session_state:
     st.session_state.pdp_result = None
 
-# Function to clean non-English characters and all words before them
+# Function to clean non-English characters and any English values before them
 def clean_non_english(text):
     # Find the first non-ASCII character
     match = re.search(r'[^\x00-\x7F]', text)
     if match:
         # Keep only the part after the first non-English character
         text = text[match.end():].strip()
-    # Remove any remaining non-English characters, keeping ASCII letters, digits, and spaces
-    return re.sub(r'[^\x00-\x7F]', ' ', text).strip()
+        # Remove any remaining non-English characters, keeping ASCII letters, digits, and spaces
+        text = re.sub(r'[^\x00-\x7F]', ' ', text).strip()
+    # If no non-ASCII character found, return original text
+    return text
 
 # Function to process input and extract unique AW IDs
 def process_input(input_text):
@@ -26,13 +28,14 @@ def process_input(input_text):
     
     # Parse each line for AW IDs
     for line in lines:
-        # Clean non-English characters and words before them
+        # Clean non-English characters and English values before them
         cleaned_line = clean_non_english(line)
-        # Extract numeric IDs from the cleaned line
-        tokens = re.split(r'[,\s]+', cleaned_line)
-        for token in tokens:
-            if token.strip().isdigit():
-                aw_ids.append(token.strip())
+        if cleaned_line:
+            # Extract numeric IDs from the cleaned line
+            tokens = re.split(r'[,\s]+', cleaned_line)
+            for token in tokens:
+                if token.strip().isdigit():
+                    aw_ids.append(token.strip())
     
     # Remove duplicate AW IDs while preserving order
     unique_aw_ids = []
@@ -62,7 +65,7 @@ def process_input_for_table(input_text):
                 product_type = clean_non_english(columns[1].strip())
                 # Only concatenate if both parts are non-empty
                 if artwork_name_line and product_type:
-                    artwork_name = f"{artwork_name_line} {product_type}"
+                    artwork_name = f"{artwork_name_line} - {product_type}"
                 elif artwork_name_line:
                     artwork_name = artwork_name_line
                 elif product_type:
@@ -132,9 +135,9 @@ st.title("Artwork ID and URL Generator")
 # Block 1: Generate Full Table
 with st.container():
     st.header("Generate Full Table")
-    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and words before them will be removed in the output.")
+    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and any English values before them will be removed in the output.")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="Please Input!",
+                                     placeholder="e.g., Please Input.",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
@@ -188,9 +191,9 @@ st.markdown("---")
 # Block 2: Process for PDP
 with st.container():
     st.header("Process for PDP")
-    st.write("Enter one AW ID per line. Non-English characters and words before them will be removed in the output.")
+    st.write("Enter one AW ID per line. Non-English characters and any English values before them will be removed in the output.")
     input_text_ids = st.text_area("AW IDs:", 
-                                 placeholder="Please input! ",
+                                 placeholder="e.g., Please input!",
                                  key="ids_input")
     
     if st.button("Process for PDP", key="btn_pdp"):
