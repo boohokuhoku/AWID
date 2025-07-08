@@ -68,6 +68,11 @@ def create_id_table(aw_ids):
     })
     return df
 
+# Function to format unique AW IDs for PDP
+def process_for_pdp(aw_ids):
+    # Join unique AW IDs with commas and spaces
+    return ', '.join(aw_ids)
+
 # Streamlit app layout
 st.title("Artwork ID and URL Generator")
 
@@ -145,6 +150,38 @@ if st.button("Generate Unique AW IDs"):
                 <textarea id="copyable-text-unique" style="display:none;">{}</textarea>
                 <button onclick="copyToClipboardUnique()">Copy Unique AW IDs to Clipboard</button>
             """.format(table_text), unsafe_allow_html=True)
+        else:
+            st.error("No valid numeric AW IDs found in the input.")
+    else:
+        st.error("Please enter at least one line with an artwork name and AW IDs.")
+
+# Button to generate PDP formatted AW IDs
+if st.button("Process for PDP"):
+    if input_text:
+        unique_aw_id_pairs = process_input(input_text)
+        if unique_aw_id_pairs:
+            # Extract AW IDs
+            aw_ids = [pair[0] for pair in unique_aw_id_pairs]
+            
+            # Format for PDP
+            pdp_text = process_for_pdp(aw_ids)
+            st.subheader("PDP Formatted AW IDs:")
+            st.text(pdp_text)
+            
+            # Create a button to copy the PDP text
+            st.text_area("Copyable PDP AW IDs:", pdp_text, height=100)
+            st.markdown("""
+                <script>
+                function copyToClipboardPDP() {
+                    const text = document.getElementById('copyable-text-pdp').value;
+                    navigator.clipboard.writeText(text).then(() => {
+                        alert('PDP AW IDs copied to clipboard!');
+                    });
+                }
+                </script>
+                <textarea id="copyable-text-pdp" style="display:none;">{}</textarea>
+                <button onclick="copyToClipboardPDP()">Copy PDP AW IDs to Clipboard</button>
+            """.format(pdp_text), unsafe_allow_html=True)
         else:
             st.error("No valid numeric AW IDs found in the input.")
     else:
