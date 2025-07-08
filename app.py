@@ -139,7 +139,7 @@ with st.container():
     st.header("Generate Full Table")
     st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and any values before the last non-English character will be removed, and the output Artwork Name will start with English characters.")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="e.g., 云朵宠物 Cloud Pet\t手机支架 Snappy Grip Stand\t35221837,35226788,Disabled\n云中散步 Artwork\tTablet Case\t35207351,Disabled\nOR\nSora's 云朵宠物 Cloud Pet 手机支架 Snappy Grip Stand\t35221837,35226788,Disabled",
+                                     placeholder="e.g.Please Input!",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
@@ -195,7 +195,7 @@ with st.container():
     st.header("Process for PDP")
     st.write("Enter one AW ID per line. Non-English characters and any English values before them will be removed in the output.")
     input_text_ids = st.text_area("AW IDs:", 
-                                 placeholder="e.g., Prefix 艺术 35167317\nPrefix 名 35175930\n35221240",
+                                 placeholder="e.g., Please Input!",
                                  key="ids_input")
     
     if st.button("Process for PDP", key="btn_pdp"):
