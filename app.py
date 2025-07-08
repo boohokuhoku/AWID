@@ -5,8 +5,6 @@ import pandas as pd
 # Initialize session state to store results
 if 'full_table_result' not in st.session_state:
     st.session_state.full_table_result = None
-if 'unique_ids_result' not in st.session_state:
-    st.session_state.unique_ids_result = None
 if 'pdp_result' not in st.session_state:
     st.session_state.pdp_result = None
 
@@ -91,14 +89,6 @@ def create_id_name_url_table(aw_ids, artwork_names, short_urls):
     })
     return df
 
-# Function to create a table with only unique AW IDs
-def create_id_table(aw_ids):
-    # Create DataFrame
-    df = pd.DataFrame({
-        'AW ID': aw_ids
-    })
-    return df
-
 # Function to format unique AW IDs for PDP
 def process_for_pdp(aw_ids):
     # Join unique AW IDs with commas and spaces
@@ -107,22 +97,13 @@ def process_for_pdp(aw_ids):
 # Streamlit app layout
 st.title("Artwork ID and URL Generator")
 
-# Input section for Artwork Names and AW IDs
-st.header("Artwork Name and AW ID Input")
+# Section for Artwork Name and AW ID Input with Generate Full Table
+st.header("Generate Full Table")
 st.write("Enter two tab-separated columns: Artwork Name and AW IDs (one pair per line). AW IDs can include non-numeric tokens (e.g., Disabled), but only numeric IDs are processed.")
 input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
                                  placeholder="e.g., Absolutely No Problem Phone Cases\t35221837,35226788,Disabled\nAnother Artwork Name\t35207351,Disabled",
                                  key="name_id_input")
 
-# Input section for AW IDs only
-st.header("AW ID Input for PDP")
-st.write("Enter one AW ID per line.")
-input_text_ids = st.text_area("AW IDs:", 
-                              placeholder="e.g., 35167317\n35175930\n35221240",
-                              key="ids_input")
-
-# Section for Generate Full Table
-st.subheader("Generate Full Table")
 if st.button("Generate Full Table", key="btn_full_table"):
     if input_text_name_id:
         unique_aw_id_pairs = process_input_for_table(input_text_name_id)
@@ -168,52 +149,13 @@ if st.session_state.full_table_result:
             <button onclick="copyToClipboardFull()">Copy Table to Clipboard</button>
         """.format(st.session_state.full_table_result['table_text']), unsafe_allow_html=True)
 
-# Section for Generate Unique AW IDs
-st.subheader("Generate Unique AW IDs")
-if st.button("Generate Unique AW IDs", key="btn_unique_ids"):
-    if input_text_name_id:
-        unique_aw_id_pairs = process_input_for_table(input_text_name_id)
-        if unique_aw_id_pairs:
-            # Extract AW IDs
-            aw_ids = [pair[0] for pair in unique_aw_id_pairs]
-            
-            # Create table
-            df = create_id_table(aw_ids)
-            st.session_state.unique_ids_result = {
-                'df': df,
-                'table_text': df.to_string(index=False)
-            }
-        else:
-            st.session_state.unique_ids_result = {'error': "No valid numeric AW IDs found in the input."}
-    else:
-        st.session_state.unique_ids_result = {'error': "Please enter at least one line with an artwork name and AW IDs."}
+# Section for AW ID Input for PDP with Process for PDP
+st.header("Process for PDP")
+st.write("Enter one AW ID per line.")
+input_text_ids = st.text_area("AW IDs:", 
+                              placeholder="e.g., 35167317\n35175930\n35221240",
+                              key="ids_input")
 
-# Display Unique AW IDs result if it exists
-if st.session_state.unique_ids_result:
-    if 'error' in st.session_state.unique_ids_result:
-        st.error(st.session_state.unique_ids_result['error'])
-    else:
-        st.write("Unique AW IDs:")
-        st.dataframe(st.session_state.unique_ids_result['df'])
-        st.text_area("Copyable Unique AW IDs:", 
-                     st.session_state.unique_ids_result['table_text'], 
-                     height=150, 
-                     key="unique_ids_copy")
-        st.markdown("""
-            <script>
-            function copyToClipboardUnique() {
-                const text = document.getElementById('unique_ids_copy').value;
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('Unique AW IDs copied to clipboard!');
-                });
-            }
-            </script>
-            <textarea id="unique_ids_copy" style="display:none;">{}</textarea>
-            <button onclick="copyToClipboardUnique()">Copy Unique AW IDs to Clipboard</button>
-        """.format(st.session_state.unique_ids_result['table_text']), unsafe_allow_html=True)
-
-# Section for Process for PDP
-st.subheader("Process for PDP")
 if st.button("Process for PDP", key="btn_pdp"):
     if input_text_ids:
         pdp_text = process_input(input_text_ids)
