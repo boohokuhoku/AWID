@@ -107,7 +107,6 @@ st.title("Artwork ID and URL Generator")
 # Block 1: Generate Full Table
 with st.container():
     st.header("Generate Full Table")
-    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). AW IDs can include non-numeric tokens (e.g., Disabled), but only numeric IDs are processed.")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
                                      placeholder="e.g., Absolutely No Problem\tPhone Cases\t35221837,35226788,Disabled\nAnother Artwork\t35207351,Disabled\nOR\nAbsolutely No Problem Phone Cases\t35221837,35226788,Disabled",
                                      key="name_id_input")
