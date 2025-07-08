@@ -8,8 +8,14 @@ if 'full_table_result' not in st.session_state:
 if 'pdp_result' not in st.session_state:
     st.session_state.pdp_result = None
 
-# Function to clean non-English characters, keeping ASCII letters, digits, and spaces
+# Function to clean non-English characters and all words before them
 def clean_non_english(text):
+    # Find the first non-ASCII character
+    match = re.search(r'[^\x00-\x7F]', text)
+    if match:
+        # Keep only the part after the first non-English character
+        text = text[match.end():].strip()
+    # Remove any remaining non-English characters, keeping ASCII letters, digits, and spaces
     return re.sub(r'[^\x00-\x7F]', ' ', text).strip()
 
 # Function to process input and extract unique AW IDs
@@ -20,11 +26,13 @@ def process_input(input_text):
     
     # Parse each line for AW IDs
     for line in lines:
-        # Clean non-English characters
+        # Clean non-English characters and words before them
         cleaned_line = clean_non_english(line)
-        # Filter for numeric IDs
-        if cleaned_line.isdigit():
-            aw_ids.append(cleaned_line)
+        # Extract numeric IDs from the cleaned line
+        tokens = re.split(r'[,\s]+', cleaned_line)
+        for token in tokens:
+            if token.strip().isdigit():
+                aw_ids.append(token.strip())
     
     # Remove duplicate AW IDs while preserving order
     unique_aw_ids = []
@@ -50,16 +58,27 @@ def process_input_for_table(input_text):
         if len(columns) >= 2:
             if len(columns) >= 3:
                 # Three columns: Artwork Name in Line Sheet, Product Type, AW IDs
-                artwork_name = clean_non_english(f"{columns[0].strip()} - {columns[1].strip()}")
+                artwork_name_line = clean_non_english(columns[0].strip())
+                product_type = clean_non_english(columns[1].strip())
+                # Only concatenate if both parts are non-empty
+                if artwork_name_line and product_type:
+                    artwork_name = f"{artwork_name_line} {product_type}"
+                elif artwork_name_line:
+                    artwork_name = artwork_name_line
+                elif product_type:
+                    artwork_name = product_type
+                else:
+                    artwork_name = ""
                 aw_ids = [token.strip() for token in re.split(r'[,\s]+', clean_non_english(columns[2])) if token.strip() and token.isdigit()]
             else:
                 # Two columns: Artwork Name, AW IDs
                 artwork_name = clean_non_english(columns[0].strip())
                 aw_ids = [token.strip() for token in re.split(r'[,\s]+', clean_non_english(columns[1])) if token.strip() and token.isdigit()]
             
-            # Pair each AW ID with the artwork name
-            for aw_id in aw_ids:
-                aw_id_name_pairs.append((aw_id, artwork_name))
+            # Pair each AW ID with the artwork name, if artwork_name is not empty
+            if artwork_name:
+                for aw_id in aw_ids:
+                    aw_id_name_pairs.append((aw_id, artwork_name))
     
     # Remove duplicate AW IDs while preserving order and keeping the first associated artwork name
     unique_aw_ids = []
@@ -113,9 +132,9 @@ st.title("Artwork ID and URL Generator")
 # Block 1: Generate Full Table
 with st.container():
     st.header("Generate Full Table")
-    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters are allowed but will be removed in the output.")
+    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and words before them will be removed in the output.")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="e.g., Absolutely No Problem 艺术品\tPhone Cases\t35221837,35226788,Disabled\nAnother Artwork 名\t35207351,Disabled\nOR\nAbsolutely No Problem Phone Cases 艺术\t35221837,35226788,Disabled",
+                                     placeholder="e.g., Hello 艺术 World\tPhone Cases\t35221837,35226788,Disabled\nPrefix 名 Another Artwork\t35207351,Disabled\nOR\nHello 艺术 World Phone Cases\t35221837,35226788,Disabled",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
@@ -169,9 +188,9 @@ st.markdown("---")
 # Block 2: Process for PDP
 with st.container():
     st.header("Process for PDP")
-    st.write("Enter one AW ID per line. Non-English characters are allowed but will be removed in the output.")
+    st.write("Enter one AW ID per line. Non-English characters and words before them will be removed in the output.")
     input_text_ids = st.text_area("AW IDs:", 
-                                 placeholder="e.g., 35167317 艺术\n35175930 名\n35221240",
+                                 placeholder="Please input! ",
                                  key="ids_input")
     
     if st.button("Process for PDP", key="btn_pdp"):
