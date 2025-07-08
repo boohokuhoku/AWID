@@ -134,7 +134,7 @@ with st.container():
     st.header("Generate Full Table")
     st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and words before them will be removed in the output.")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="e.g., Hello 艺术 World\tPhone Cases\t35221837,35226788,Disabled\nPrefix 名 Another Artwork\t35207351,Disabled\nOR\nHello 艺术 World Phone Cases\t35221837,35226788,Disabled",
+                                     placeholder="Please Input!",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
