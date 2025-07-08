@@ -4,7 +4,7 @@ import pandas as pd
 
 # Function to clean artwork name to include only English (ASCII) characters
 def clean_artwork_name(name):
-    # Keep only ASCII letters, digits, spaces, and basic punctuation, remove non-English characters
+    # Remove non-ASCII (non-English) characters, keep letters, digits, spaces, and basic punctuation
     clean_name = re.sub(r'[^\x00-\x7F]+', '', name).strip()
     return clean_name
 
@@ -19,7 +19,7 @@ def process_input(input_text):
         # Split by tabs, expect at least two columns
         columns = re.split(r'\t+', line)
         if len(columns) >= 2:
-            # Clean artwork name to remove non-English characters
+            # Clean artwork name to remove non-English characters for output
             artwork_name = clean_artwork_name(columns[0].strip())
             if artwork_name:  # Only process if cleaned name is not empty
                 # Split AW IDs by commas or spaces, filter for numeric IDs
@@ -88,7 +88,7 @@ if st.button("Generate Table"):
             # Extract AW IDs and artwork names
             aw_ids = [pair[0] for pair in unique_aw_id_pairs]
             artwork_names = [pair[1] for pair in unique_aw_id_pairs]
-            # Generate short URLs from artwork names
+            # Generate short URLs from cleaned artwork names
             short_urls = generate_short_urls(artwork_names)
             
             # Create and display table
