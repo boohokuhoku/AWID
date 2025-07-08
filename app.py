@@ -44,7 +44,7 @@ def process_input_for_table(input_text):
         if len(columns) >= 2:
             if len(columns) >= 3:
                 # Three columns: Artwork Name in Line Sheet, Product Type, AW IDs
-                artwork_name = f"{columns[0].strip()} - {columns[1].strip()}"
+                artwork_name = f"{columns[0].strip()} {columns[1].strip()}"
                 aw_ids = [token.strip() for token in re.split(r'[,\s]+', columns[2]) if token.strip() and token.isdigit()]
             else:
                 # Two columns: Artwork Name, AW IDs
