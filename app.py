@@ -8,13 +8,15 @@ if 'full_table_result' not in st.session_state:
 if 'pdp_result' not in st.session_state:
     st.session_state.pdp_result = None
 
-# Function to clean non-English characters and any English values before them
+# Function to clean non-English characters and any English values before the last non-English character
 def clean_non_english(text):
-    # Find the first non-ASCII character
-    match = re.search(r'[^\x00-\x7F]', text)
-    if match:
-        # Keep only the part after the first non-English character
-        text = text[match.end():].strip()
+    # Find all non-ASCII characters
+    matches = list(re.finditer(r'[^\x00-\x7F]', text))
+    if matches:
+        # Get the last non-ASCII character's end position
+        last_non_ascii_end = matches[-1].end()
+        # Keep only the part after the last non-English character
+        text = text[last_non_ascii_end:].strip()
         # Remove any remaining non-English characters, keeping ASCII letters, digits, and spaces
         text = re.sub(r'[^\x00-\x7F]', ' ', text).strip()
     # If no non-ASCII character found, return original text
@@ -28,7 +30,7 @@ def process_input(input_text):
     
     # Parse each line for AW IDs
     for line in lines:
-        # Clean non-English characters and English values before them
+        # Clean non-English characters and English values before the first non-English character
         cleaned_line = clean_non_english(line)
         if cleaned_line:
             # Extract numeric IDs from the cleaned line
@@ -135,9 +137,9 @@ st.title("Artwork ID and URL Generator")
 # Block 1: Generate Full Table
 with st.container():
     st.header("Generate Full Table")
-    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and any English values before them will be removed, and the output Artwork Name will start with English characters.")
+    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and any values before the last non-English character will be removed, and the output Artwork Name will start with English characters.")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="e.g., 云朵宠物 Cloud Pet\tSnappy Grip Stand\t35221837,35226788,Disabled\n云中散步 Artwork\tTablet Case\t35207351,Disabled\nOR\n云朵宠物 Sora's Cloud Pet Snappy Grip Stand\t35221837,35226788,Disabled",
+                                     placeholder="e.g., 云朵宠物 Cloud Pet\t手机支架 Snappy Grip Stand\t35221837,35226788,Disabled\n云中散步 Artwork\tTablet Case\t35207351,Disabled\nOR\nSora's 云朵宠物 Cloud Pet 手机支架 Snappy Grip Stand\t35221837,35226788,Disabled",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
