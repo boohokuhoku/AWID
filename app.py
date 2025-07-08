@@ -43,9 +43,9 @@ def generate_short_urls(artwork_names):
     name_count = {}
     
     for name in artwork_names:
-        # Clean name to remove non-English characters
-        clean_name = clean_artwork_name(name)
-        if clean_name:  # Only process if cleaned name is not empty
+        # Use cleaned name (already cleaned in process_input)
+        clean_name = name  # Name is already cleaned from process_input
+        if clean_name:  # Only process if name is not empty
             # Convert to lowercase, replace special characters with spaces, and split
             clean_name = re.sub(r'[^\w\s]', ' ', clean_name.lower()).strip()
             # Replace multiple spaces with single space and then replace spaces with hyphens
@@ -59,7 +59,7 @@ def generate_short_urls(artwork_names):
                 name_count[slug] = 0
                 short_urls.append(slug)
         else:
-            short_urls.append("")  # Empty URL for empty cleaned names
+            short_urls.append("")  # Empty URL for empty names (shouldn't occur due to process_input filter)
     
     return short_urls
 
@@ -78,7 +78,7 @@ st.title("Artwork ID and URL Generator")
 
 # Input section for Artwork Names and AW IDs
 st.header("Artwork Name and AW ID Input")
-st.write("Enter two tab-separated columns: Artwork Name and AW IDs (one pair per line). AW IDs can include non-numeric tokens (e.g., Disabled). Non-English characters in artwork names are excluded from results.")
+st.write("Enter two tab-separated columns: Artwork Name (can include non-English text, which will be removed in output) and AW IDs (one pair per line). AW IDs can include non-numeric tokens (e.g., Disabled), but only numeric IDs are processed.")
 input_text = st.text_area("Artwork Names and AW IDs:", 
                          placeholder="e.g., Absolutely No Problem Phone Cases 特殊字符\t35221837,35226788,Disabled\nAnother Artwork Name テスト\t35207351,Disabled")
 if st.button("Generate Table"):
@@ -114,6 +114,6 @@ if st.button("Generate Table"):
                 <button onclick="copyToClipboard()">Copy Table to Clipboard</button>
             """.format(table_text), unsafe_allow_html=True)
         else:
-            st.error("No valid numeric AW IDs found in the input.")
+            st.error("No valid numeric AW IDs or valid English artwork names found in the input.")
     else:
         st.error("Please enter at least one line with an artwork name and AW IDs.")
