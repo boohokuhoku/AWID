@@ -107,8 +107,9 @@ st.title("Artwork ID and URL Generator")
 # Block 1: Generate Full Table
 with st.container():
     st.header("Generate Full Table")
+    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). AW IDs can include non-numeric tokens (e.g., Disabled), but only numeric IDs are processed.")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="Please Input"
+                                     placeholder="Please input.",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
@@ -164,7 +165,7 @@ with st.container():
     st.header("Process for PDP")
     st.write("Enter one AW ID per line.")
     input_text_ids = st.text_area("AW IDs:", 
-                                 placeholder="e.g., 35167317\n35175930\n35221240",
+                                 placeholder="e.g., 12345678",
                                  key="ids_input")
     
     if st.button("Process for PDP", key="btn_pdp"):
