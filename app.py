@@ -2,32 +2,28 @@ import streamlit as st
 import re
 import pandas as pd
 
-# Function to process input and extract unique AW IDs with corresponding artwork names
+# Function to process input and extract unique AW IDs
 def process_input(input_text):
     # Split input by newlines and strip whitespace
     lines = [line.strip() for line in input_text.split('\n') if line.strip()]
-    aw_id_name_pairs = []
+    aw_ids = []
     
-    # Parse each line for artwork name and AW IDs
+    # Parse each line for AW IDs
     for line in lines:
-        # Split by tabs, expect at least two columns
-        columns = re.split(r'\t+', line)
-        if len(columns) >= 2:
-            artwork_name = columns[0].strip()
-            # Split AW IDs by commas or spaces, filter for numeric IDs
-            aw_ids = [token.strip() for token in re.split(r'[,\s]+', columns[1]) if token.strip() and token.isdigit()]
-            for aw_id in aw_ids:
-                aw_id_name_pairs.append((aw_id, artwork_name))
+        # Filter for numeric IDs
+        if line.isdigit():
+            aw_ids.append(line)
     
-    # Remove duplicate AW IDs while preserving order and keeping the first associated artwork name
+    # Remove duplicate AW IDs while preserving order
     unique_aw_ids = []
     seen_aw_ids = set()
-    for aw_id, artwork_name in aw_id_name_pairs:
+    for aw_id in aw_ids:
         if aw_id not in seen_aw_ids:
-            unique_aw_ids.append((aw_id, artwork_name))
+            unique_aw_ids.append(aw_id)
             seen_aw_ids.add(aw_id)
     
-    return unique_aw_ids
+    # Format as comma-separated string
+    return ', '.join(unique_aw_ids)
 
 # Function to generate short URLs from artwork names
 def generate_short_urls(artwork_names):
@@ -79,14 +75,39 @@ st.title("Artwork ID and URL Generator")
 # Input section for Artwork Names and AW IDs
 st.header("Artwork Name and AW ID Input")
 st.write("Enter two tab-separated columns: Artwork Name and AW IDs (one pair per line). AW IDs can include non-numeric tokens (e.g., Disabled), but only numeric IDs are processed.")
-input_text = st.text_area("Artwork Names and AW IDs:", 
-                         placeholder="e.g., Absolutely No Problem Phone Cases\t35221837,35226788,Disabled\nAnother Artwork Name\t35207351,Disabled")
+input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
+                                 placeholder="e.g., Absolutely No Problem Phone Cases\t35221837,35226788,Disabled\nAnother Artwork Name\t35207351,Disabled")
+
+# Input section for AW IDs only
+st.header("AW ID Input for PDP")
+st.write("Enter one AW ID per line.")
+input_text_ids = st.text_area("AW IDs:", 
+                              placeholder="e.g., 35167317\n35175930\n35221240")
 
 # Button to generate table with AW IDs, Artwork Names, and Short URLs
 if st.button("Generate Full Table"):
-    if input_text:
-        unique_aw_id_pairs = process_input(input_text)
-        if unique_aw_id_pairs:
+    if input_text_name_id:
+        # Process input as before
+        lines = [line.strip() for line in input_text_name_id.split('\n') if line.strip()]
+        aw_id_name_pairs = []
+        
+        for line in lines:
+            columns = re.split(r'\t+', line)
+            if len(columns) >= 2:
+                artwork_name = columns[0].strip()
+                aw_ids = [token.strip() for token in re.split(r'[,\s]+', columns[1]) if token.strip() and token.isdigit()]
+                for aw_id in aw_ids:
+                    aw_id_name_pairs.append((aw_id, artwork_name))
+        
+        if aw_id_name_pairs:
+            # Remove duplicates
+            unique_aw_id_pairs = []
+            seen_aw_ids = set()
+            for aw_id, artwork_name in aw_id_name_pairs:
+                if aw_id not in seen_aw_ids:
+                    unique_aw_id_pairs.append((aw_id, artwork_name))
+                    seen_aw_ids.add(aw_id)
+            
             # Extract AW IDs and artwork names
             aw_ids = [pair[0] for pair in unique_aw_id_pairs]
             artwork_names = [pair[1] for pair in unique_aw_id_pairs]
@@ -122,9 +143,28 @@ if st.button("Generate Full Table"):
 
 # Button to generate table with only unique AW IDs
 if st.button("Generate Unique AW IDs"):
-    if input_text:
-        unique_aw_id_pairs = process_input(input_text)
-        if unique_aw_id_pairs:
+    if input_text_name_id:
+        # Process input as before
+        lines = [line.strip() for line in input_text_name_id.split('\n') if line.strip()]
+        aw_id_name_pairs = []
+        
+        for line in lines:
+            columns = re.split(r'\t+', line)
+            if len(columns) >= 2:
+                artwork_name = columns[0].strip()
+                aw_ids = [token.strip() for token in re.split(r'[,\s]+', columns[1]) if token.strip() and token.isdigit()]
+                for aw_id in aw_ids:
+                    aw_id_name_pairs.append((aw_id, artwork_name))
+        
+        if aw_id_name_pairs:
+            # Remove duplicates
+            unique_aw_id_pairs = []
+            seen_aw_ids = set()
+            for aw_id, artwork_name in aw_id_name_pairs:
+                if aw_id not in seen_aw_ids:
+                    unique_aw_id_pairs.append((aw_id, artwork_name))
+                    seen_aw_ids.add(aw_id)
+            
             # Extract AW IDs
             aw_ids = [pair[0] for pair in unique_aw_id_pairs]
             
@@ -157,14 +197,9 @@ if st.button("Generate Unique AW IDs"):
 
 # Button to generate PDP formatted AW IDs
 if st.button("Process for PDP"):
-    if input_text:
-        unique_aw_id_pairs = process_input(input_text)
-        if unique_aw_id_pairs:
-            # Extract AW IDs
-            aw_ids = [pair[0] for pair in unique_aw_id_pairs]
-            
-            # Format for PDP
-            pdp_text = process_for_pdp(aw_ids)
+    if input_text_ids:
+        pdp_text = process_input(input_text_ids)
+        if pdp_text:
             st.subheader("PDP Formatted AW IDs:")
             st.text(pdp_text)
             
@@ -185,4 +220,4 @@ if st.button("Process for PDP"):
         else:
             st.error("No valid numeric AW IDs found in the input.")
     else:
-        st.error("Please enter at least one line with an artwork name and AW IDs.")
+        st.error("Please enter at least one AW ID.")
