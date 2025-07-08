@@ -108,7 +108,7 @@ st.title("Artwork ID and URL Generator")
 with st.container():
     st.header("Generate Full Table")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="e.g., Absolutely No Problem\tPhone Cases\t35221837,35226788,Disabled\nAnother Artwork\t35207351,Disabled\nOR\nAbsolutely No Problem Phone Cases\t35221837,35226788,Disabled",
+                                     placeholder="Please Input"
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
