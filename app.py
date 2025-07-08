@@ -97,95 +97,100 @@ def process_for_pdp(aw_ids):
 # Streamlit app layout
 st.title("Artwork ID and URL Generator")
 
-# Section for Artwork Name and AW ID Input with Generate Full Table
-st.header("Generate Full Table")
-st.write("Enter two tab-separated columns: Artwork Name and AW IDs (one pair per line). AW IDs can include non-numeric tokens (e.g., Disabled), but only numeric IDs are processed.")
-input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                 placeholder="e.g., Absolutely No Problem Phone Cases\t35221837,35226788,Disabled\nAnother Artwork Name\t35207351,Disabled",
-                                 key="name_id_input")
-
-if st.button("Generate Full Table", key="btn_full_table"):
-    if input_text_name_id:
-        unique_aw_id_pairs = process_input_for_table(input_text_name_id)
-        if unique_aw_id_pairs:
-            # Extract AW IDs and artwork names
-            aw_ids = [pair[0] for pair in unique_aw_id_pairs]
-            artwork_names = [pair[1] for pair in unique_aw_id_pairs]
-            # Generate short URLs from artwork names
-            short_urls = generate_short_urls(artwork_names)
-            
-            # Create table
-            df = create_id_name_url_table(aw_ids, artwork_names, short_urls)
-            st.session_state.full_table_result = {
-                'df': df,
-                'table_text': df.to_string(index=False)
-            }
+# Block 1: Generate Full Table
+with st.container():
+    st.header("Generate Full Table")
+    st.write("Enter two tab-separated columns: Artwork Name and AW IDs (one pair per line). AW IDs can include non-numeric tokens (e.g., Disabled), but only numeric IDs are processed.")
+    input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
+                                     placeholder="e.g., Absolutely No Problem Phone Cases\t35221837,35226788,Disabled\nAnother Artwork Name\t35207351,Disabled",
+                                     key="name_id_input")
+    
+    if st.button("Generate Full Table", key="btn_full_table"):
+        if input_text_name_id:
+            unique_aw_id_pairs = process_input_for_table(input_text_name_id)
+            if unique_aw_id_pairs:
+                # Extract AW IDs and artwork names
+                aw_ids = [pair[0] for pair in unique_aw_id_pairs]
+                artwork_names = [pair[1] for pair in unique_aw_id_pairs]
+                # Generate short URLs from artwork names
+                short_urls = generate_short_urls(artwork_names)
+                
+                # Create table
+                df = create_id_name_url_table(aw_ids, artwork_names, short_urls)
+                st.session_state.full_table_result = {
+                    'df': df,
+                    'table_text': df.to_string(index=False)
+                }
+            else:
+                st.session_state.full_table_result = {'error': "No valid numeric AW IDs found in the input."}
         else:
-            st.session_state.full_table_result = {'error': "No valid numeric AW IDs found in the input."}
-    else:
-        st.session_state.full_table_result = {'error': "Please enter at least one line with an artwork name and AW IDs."}
-
-# Display Full Table result if it exists
-if st.session_state.full_table_result:
-    if 'error' in st.session_state.full_table_result:
-        st.error(st.session_state.full_table_result['error'])
-    else:
-        st.write("Generated Table:")
-        st.dataframe(st.session_state.full_table_result['df'])
-        st.text_area("Copyable Table Content:", 
-                     st.session_state.full_table_result['table_text'], 
-                     height=150, 
-                     key="full_table_copy")
-        st.markdown("""
-            <script>
-            function copyToClipboardFull() {
-                const text = document.getElementById('full_table_copy').value;
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('Table copied to clipboard!');
-                });
-            }
-            </script>
-            <textarea id="full_table_copy" style="display:none;">{}</textarea>
-            <button onclick="copyToClipboardFull()">Copy Table to Clipboard</button>
-        """.format(st.session_state.full_table_result['table_text']), unsafe_allow_html=True)
-
-# Section for AW ID Input for PDP with Process for PDP
-st.header("Process for PDP")
-st.write("Enter one AW ID per line.")
-input_text_ids = st.text_area("AW IDs:", 
-                              placeholder="e.g., 35167317\n35175930\n35221240",
-                              key="ids_input")
-
-if st.button("Process for PDP", key="btn_pdp"):
-    if input_text_ids:
-        pdp_text = process_input(input_text_ids)
-        if pdp_text:
-            st.session_state.pdp_result = {'pdp_text': pdp_text}
+            st.session_state.full_table_result = {'error': "Please enter at least one line with an artwork name and AW IDs."}
+    
+    # Display Full Table result if it exists
+    if st.session_state.full_table_result:
+        if 'error' in st.session_state.full_table_result:
+            st.error(st.session_state.full_table_result['error'])
         else:
-            st.session_state.pdp_result = {'error': "No valid numeric AW IDs found in the input."}
-    else:
-        st.session_state.pdp_result = {'error': "Please enter at least one AW ID."}
+            st.write("Generated Table:")
+            st.dataframe(st.session_state.full_table_result['df'])
+            st.text_area("Copyable Table Content:", 
+                         st.session_state.full_table_result['table_text'], 
+                         height=150, 
+                         key="full_table_copy")
+            st.markdown("""
+                <script>
+                function copyToClipboardFull() {
+                    const text = document.getElementById('full_table_copy').value;
+                    navigator.clipboard.writeText(text).then(() => {
+                        alert('Table copied to clipboard!');
+                    });
+                }
+                </script>
+                <textarea id="full_table_copy" style="display:none;">{}</textarea>
+                <button onclick="copyToClipboardFull()">Copy Table to Clipboard</button>
+            """.format(st.session_state.full_table_result['table_text']), unsafe_allow_html=True)
 
-# Display PDP result if it exists
-if st.session_state.pdp_result:
-    if 'error' in st.session_state.pdp_result:
-        st.error(st.session_state.pdp_result['error'])
-    else:
-        st.write("PDP Formatted AW IDs:")
-        st.text(st.session_state.pdp_result['pdp_text'])
-        st.text_area("Copyable PDP AW IDs:", 
-                     st.session_state.pdp_result['pdp_text'], 
-                     height=100, 
-                     key="pdp_copy")
-        st.markdown("""
-            <script>
-            function copyToClipboardPDP() {
-                const text = document.getElementById('pdp_copy').value;
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('PDP AW IDs copied to clipboard!');
-                });
-            }
-            </script>
-            <textarea id="pdp_copy" style="display:none;">{}</textarea>
-            <button onclick="copyToClipboardPDP()">Copy PDP AW IDs to Clipboard</button>
-        """.format(st.session_state.pdp_result['pdp_text']), unsafe_allow_html=True)
+# Divider for visual separation
+st.markdown("---")
+
+# Block 2: Process for PDP
+with st.container():
+    st.header("Process for PDP")
+    st.write("Enter one AW ID per line.")
+    input_text_ids = st.text_area("AW IDs:", 
+                                 placeholder="e.g., 35167317\n35175930\n35221240",
+                                 key="ids_input")
+    
+    if st.button("Process for PDP", key="btn_pdp"):
+        if input_text_ids:
+            pdp_text = process_input(input_text_ids)
+            if pdp_text:
+                st.session_state.pdp_result = {'pdp_text': pdp_text}
+            else:
+                st.session_state.pdp_result = {'error': "No valid numeric AW IDs found in the input."}
+        else:
+            st.session_state.pdp_result = {'error': "Please enter at least one AW ID."}
+    
+    # Display PDP result if it exists
+    if st.session_state.pdp_result:
+        if 'error' in st.session_state.pdp_result:
+            st.error(st.session_state.pdp_result['error'])
+        else:
+            st.write("PDP Formatted AW IDs:")
+            st.text(st.session_state.pdp_result['pdp_text'])
+            st.text_area("Copyable PDP AW IDs:", 
+                         st.session_state.pdp_result['pdp_text'], 
+                         height=100, 
+                         key="pdp_copy")
+            st.markdown("""
+                <script>
+                function copyToClipboardPDP() {
+                    const text = document.getElementById('pdp_copy').value;
+                    navigator.clipboard.writeText(text).then(() => {
+                        alert('PDP AW IDs copied to clipboard!');
+                    });
+                }
+                </script>
+                <textarea id="pdp_copy" style="display:none;">{}</textarea>
+                <button onclick="copyToClipboardPDP()">Copy PDP AW IDs to Clipboard</button>
+            """.format(st.session_state.pdp_result['pdp_text']), unsafe_allow_html=True)
