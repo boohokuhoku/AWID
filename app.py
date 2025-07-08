@@ -39,12 +39,19 @@ def process_input_for_table(input_text):
     
     # Parse each line for artwork name and AW IDs
     for line in lines:
-        # Split by tabs, expect at least two columns
+        # Split by tabs
         columns = re.split(r'\t+', line)
         if len(columns) >= 2:
-            artwork_name = columns[0].strip()
-            # Split AW IDs by commas or spaces, filter for numeric IDs
-            aw_ids = [token.strip() for token in re.split(r'[,\s]+', columns[1]) if token.strip() and token.isdigit()]
+            if len(columns) >= 3:
+                # Three columns: Artwork Name in Line Sheet, Product Type, AW IDs
+                artwork_name = f"{columns[0].strip()} - {columns[1].strip()}"
+                aw_ids = [token.strip() for token in re.split(r'[,\s]+', columns[2]) if token.strip() and token.isdigit()]
+            else:
+                # Two columns: Artwork Name, AW IDs
+                artwork_name = columns[0].strip()
+                aw_ids = [token.strip() for token in re.split(r'[,\s]+', columns[1]) if token.strip() and token.isdigit()]
+            
+            # Pair each AW ID with the artwork name
             for aw_id in aw_ids:
                 aw_id_name_pairs.append((aw_id, artwork_name))
     
@@ -100,9 +107,9 @@ st.title("Artwork ID and URL Generator")
 # Block 1: Generate Full Table
 with st.container():
     st.header("Generate Full Table")
-    st.write("Enter two tab-separated columns: Artwork Name and AW IDs (one pair per line). AW IDs can include non-numeric tokens (e.g., Disabled), but only numeric IDs are processed.")
+    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). AW IDs can include non-numeric tokens (e.g., Disabled), but only numeric IDs are processed.")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="e.g., Absolutely No Problem Phone Cases\t35221837,35226788,Disabled\nAnother Artwork Name\t35207351,Disabled",
+                                     placeholder="e.g., Absolutely No Problem\tPhone Cases\t35221837,35226788,Disabled\nAnother Artwork\t35207351,Disabled\nOR\nAbsolutely No Problem Phone Cases\t35221837,35226788,Disabled",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
