@@ -67,7 +67,7 @@ def process_input_for_table(input_text):
                 product_type = clean_non_english(columns[1].strip())
                 # Only concatenate if both parts are non-empty
                 if artwork_name_line and product_type:
-                    artwork_name = f"{artwork_name_line} - {product_type}"
+                    artwork_name = f"{artwork_name_line} {product_type}"
                 elif artwork_name_line:
                     artwork_name = artwork_name_line
                 elif product_type:
