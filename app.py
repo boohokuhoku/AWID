@@ -65,6 +65,13 @@ def process_input_for_table(input_text):
                 # Three columns: Artwork Name in Line Sheet, Product Type, AW IDs
                 artwork_name_line = clean_non_english(columns[0].strip())
                 product_type = clean_non_english(columns[1].strip())
+                # Apply word replacements
+                artwork_name_line = re.sub(r'\biphone\b', 'phone', artwork_name_line, flags=re.IGNORECASE)
+                artwork_name_line = re.sub(r'\bipad\b', 'tablet', artwork_name_line, flags=re.IGNORECASE)
+                artwork_name_line = re.sub(r'\bairpods\b', 'earbuds', artwork_name_line, flags=re.IGNORECASE)
+                product_type = re.sub(r'\biphone\b', 'phone', product_type, flags=re.IGNORECASE)
+                product_type = re.sub(r'\bipad\b', 'tablet', product_type, flags=re.IGNORECASE)
+                product_type = re.sub(r'\bairpods\b', 'earbuds', product_type, flags=re.IGNORECASE)
                 # Only concatenate if both parts are non-empty
                 if artwork_name_line and product_type:
                     artwork_name = f"{artwork_name_line} {product_type}"
@@ -78,6 +85,10 @@ def process_input_for_table(input_text):
             else:
                 # Two columns: Artwork Name, AW IDs
                 artwork_name = clean_non_english(columns[0].strip())
+                # Apply word replacements
+                artwork_name = re.sub(r'\biphone\b', 'phone', artwork_name, flags=re.IGNORECASE)
+                artwork_name = re.sub(r'\bipad\b', 'tablet', artwork_name, flags=re.IGNORECASE)
+                artwork_name = re.sub(r'\bairpods\b', 'earbuds', artwork_name, flags=re.IGNORECASE)
                 aw_ids = [token.strip() for token in re.split(r'[,\s]+', clean_non_english(columns[1])) if token.strip() and token.isdigit()]
             
             # Pair each AW ID with the artwork name, if artwork_name is not empty
@@ -101,12 +112,16 @@ def generate_short_urls(artwork_names):
     name_count = {}
     
     for name in artwork_names:
-        # Convert to lowercase, replace special characters with spaces, and split
-        clean_name = re.sub(r'[^\w\s]', ' ', name.lower()).strip()
+        # Apply word replacements
+        name = re.sub(r'\biphone\b', 'phone', name, flags=re.IGNORECASE)
+        name = re.sub(r'\bipad\b', 'tablet', name, flags=re.IGNORECASE)
+        name = re.sub(r'\bairpods\b', 'earbuds', name, flags=re.IGNORECASE)
+        # Convert to lowercase, replace special characters (except apostrophes) with spaces
+        clean_name = re.sub(r'[^\w\s\']', ' ', name.lower()).strip()
         # Replace multiple spaces with single space and then replace spaces with hyphens
         slug = '-'.join(clean_name.split())
         
-        # Handle duplicates to match format: e.g., absolutely-no-problem-phone-cases, absolutely-no-problem-phone-cases-atwgp1, etc.
+        # Handle duplicates to match format: e.g., i-just-cant-sit-still, i-just-cant-sit-still-atwgp1, etc.
         if slug in name_count:
             name_count[slug] += 1
             short_urls.append(f"{slug}-atwgp{name_count[slug]}")
@@ -137,9 +152,9 @@ st.title("Artwork ID and URL Generator")
 # Block 1: Generate Full Table
 with st.container():
     st.header("Generate Full Table")
-    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and any values before the last non-English character will be removed, and the output Artwork Name will start with English characters.")
+    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and any values before the last non-English character will be removed, and the output Artwork Name will start with English characters. Words like 'iphone', 'ipad', and 'airpods' will be replaced with 'phone', 'tablet', and 'earbuds' respectively in Artwork Name and Short URL. Apostrophes in words like 'can't' are preserved in Short URLs.")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="e.g.Please Input!",
+                                     placeholder="",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
@@ -195,7 +210,7 @@ with st.container():
     st.header("Process for PDP")
     st.write("Enter one AW ID per line. Non-English characters and any English values before them will be removed in the output.")
     input_text_ids = st.text_area("AW IDs:", 
-                                 placeholder="e.g., Please Input!",
+                                 placeholder="",
                                  key="ids_input")
     
     if st.button("Process for PDP", key="btn_pdp"):
