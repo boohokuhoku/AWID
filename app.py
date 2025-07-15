@@ -120,6 +120,8 @@ def generate_short_urls(artwork_names):
         clean_name = re.sub(r'[^\w\s\']', ' ', name.lower()).strip()
         # Replace multiple spaces with single space and then replace spaces with hyphens
         slug = '-'.join(clean_name.split())
+        # Remove apostrophes
+        slug = slug.replace("'", "")
         
         # Handle duplicates to match format: e.g., i-just-cant-sit-still, i-just-cant-sit-still-atwgp1, etc.
         if slug in name_count:
@@ -152,9 +154,9 @@ st.title("Artwork ID and URL Generator")
 # Block 1: Generate Full Table
 with st.container():
     st.header("Generate Full Table")
-    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and any values before the last non-English character will be removed, and the output Artwork Name will start with English characters. Words like 'iphone', 'ipad', and 'airpods' will be replaced with 'phone', 'tablet', and 'earbuds' respectively in Artwork Name and Short URL. Apostrophes in words like 'can't' are preserved in Short URLs.")
+    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and any values before the last non-English character will be removed, and the output Artwork Name will start with English characters. Words like 'iphone', 'ipad', and 'airpods' will be replaced with 'phone', 'tablet', and 'earbuds' respectively in Artwork Name and Short URL. Apostrophes are removed in Short URLs (e.g., 'can't' becomes 'cant' in Short URL).")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="",
+                                     placeholder="e.g., 云朵宠物 I just can't sit still iPhone Case\tSnappy Grip iPad Stand\t35221837,35226788,Disabled\n云中散步 Artwork\tAirPods Case\t35207351,Disabled\nOR\nSora's 云朵宠物 I just can't sit still iPhone Case\t35221837,35226788,Disabled",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
@@ -210,7 +212,7 @@ with st.container():
     st.header("Process for PDP")
     st.write("Enter one AW ID per line. Non-English characters and any English values before them will be removed in the output.")
     input_text_ids = st.text_area("AW IDs:", 
-                                 placeholder="",
+                                 placeholder="e.g., Prefix 艺术 35167317\nPrefix 名 35175930\n35221240",
                                  key="ids_input")
     
     if st.button("Process for PDP", key="btn_pdp"):
