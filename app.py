@@ -67,10 +67,10 @@ def process_input_for_table(input_text):
                 product_type = clean_non_english(columns[1].strip())
                 # Apply word replacements
                 artwork_name_line = re.sub(r'\biphone\b', 'phone', artwork_name_line, flags=re.IGNORECASE)
-                artwork_name_line = re.sub(r'\bipad\b', 'tablet', artwork_name_line, flags=re.IGNORECASE)
+                artwork_name_line = re.sub(r'\bipad\b', 'Tablet', artwork_name_line, flags=re.IGNORECASE)
                 artwork_name_line = re.sub(r'\bairpods\b', 'earbuds', artwork_name_line, flags=re.IGNORECASE)
                 product_type = re.sub(r'\biphone\b', 'phone', product_type, flags=re.IGNORECASE)
-                product_type = re.sub(r'\bipad\b', 'tablet', product_type, flags=re.IGNORECASE)
+                product_type = re.sub(r'\bipad\b', 'Tablet', product_type, flags=re.IGNORECASE)
                 product_type = re.sub(r'\bairpods\b', 'earbuds', product_type, flags=re.IGNORECASE)
                 # Only concatenate if both parts are non-empty
                 if artwork_name_line and product_type:
@@ -87,7 +87,7 @@ def process_input_for_table(input_text):
                 artwork_name = clean_non_english(columns[0].strip())
                 # Apply word replacements
                 artwork_name = re.sub(r'\biphone\b', 'phone', artwork_name, flags=re.IGNORECASE)
-                artwork_name = re.sub(r'\bipad\b', 'tablet', artwork_name, flags=re.IGNORECASE)
+                artwork_name = re.sub(r'\bipad\b', 'Tablet', artwork_name, flags=re.IGNORECASE)
                 artwork_name = re.sub(r'\bairpods\b', 'earbuds', artwork_name, flags=re.IGNORECASE)
                 aw_ids = [token.strip() for token in re.split(r'[,\s]+', clean_non_english(columns[1])) if token.strip() and token.isdigit()]
             
@@ -114,7 +114,7 @@ def generate_short_urls(artwork_names):
     for name in artwork_names:
         # Apply word replacements
         name = re.sub(r'\biphone\b', 'phone', name, flags=re.IGNORECASE)
-        name = re.sub(r'\bipad\b', 'tablet', name, flags=re.IGNORECASE)
+        name = re.sub(r'\bipad\b', 'Tablet', name, flags=re.IGNORECASE)
         name = re.sub(r'\bairpods\b', 'earbuds', name, flags=re.IGNORECASE)
         # Convert to lowercase, replace special characters (except apostrophes) with spaces
         clean_name = re.sub(r'[^\w\s\']', ' ', name.lower()).strip()
@@ -154,9 +154,9 @@ st.title("Artwork ID and URL Generator")
 # Block 1: Generate Full Table
 with st.container():
     st.header("Generate Full Table")
-    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs). Non-English characters and any values before the last non-English character will be removed, and the output Artwork Name will start with English characters. Words like 'iphone', 'ipad', and 'airpods' will be replaced with 'phone', 'tablet', and 'earbuds' respectively in Artwork Name and Short URL. Apostrophes are removed in Short URLs (e.g., 'can't' becomes 'cant' in Short URL).")
+    st.write("Enter either two tab-separated columns (Artwork Name, AW IDs) or three tab-separated columns (Artwork Name in Line Sheet, Product Type, AW IDs).")
     input_text_name_id = st.text_area("Artwork Names and AW IDs:", 
-                                     placeholder="e.g., 云朵宠物 I just can't sit still iPhone Case\tSnappy Grip iPad Stand\t35221837,35226788,Disabled\n云中散步 Artwork\tAirPods Case\t35207351,Disabled\nOR\nSora's 云朵宠物 I just can't sit still iPhone Case\t35221837,35226788,Disabled",
+                                     placeholder="",
                                      key="name_id_input")
     
     if st.button("Generate Full Table", key="btn_full_table"):
@@ -212,7 +212,7 @@ with st.container():
     st.header("Process for PDP")
     st.write("Enter one AW ID per line. Non-English characters and any English values before them will be removed in the output.")
     input_text_ids = st.text_area("AW IDs:", 
-                                 placeholder="e.g., Prefix 艺术 35167317\nPrefix 名 35175930\n35221240",
+                                 placeholder="",
                                  key="ids_input")
     
     if st.button("Process for PDP", key="btn_pdp"):
